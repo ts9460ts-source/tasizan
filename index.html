@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>かずと けいさん あそび</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    animation: {
+                        'shake': 'shake 0.5s ease-in-out',
+                        'pulse-slow': 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    },
+                    keyframes: {
+                        shake: {
+                            '0%, 100%': { transform: 'translateX(0)' },
+                            '25%': { transform: 'translateX(-15px)' },
+                            '50%': { transform: 'translateX(15px)' },
+                            '75%': { transform: 'translateX(-15px)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* タッチ操作時のハイライトを無効化 */
+        * { -webkit-tap-highlight-color: transparent; }
+        .text-shadow-lg { text-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+    </style>
+</head>
+<body class="bg-sky-50 font-sans touch-manipulation overflow-x-hidden selection:bg-transparent">
+
+    <!-- ホーム画面 -->
+    <div id="screen-home" class="min-h-screen bg-sky-100 flex flex-col items-center justify-center p-4">
+        <div class="bg-white rounded-3xl shadow-xl p-8 max-w-md w-full text-center border-4 border-sky-300 relative overflow-hidden">
+            <button onclick="changeScreen('stickerBook')" class="absolute top-4 right-4 bg-yellow-100 hover:bg-yellow-200 text-yellow-700 font-bold py-2 px-4 rounded-full shadow border-2 border-yellow-300 flex items-center gap-2 transform transition hover:scale-105">
+                📖 シールちょう
+            </button>
+            <div class="text-6xl mb-4 mt-8 animate-bounce">🎓✨</div>
+            <h1 class="text-3xl font-bold text-sky-700 mb-6 tracking-wide leading-tight">
+                かずと けいさん<br/>あそび
+            </h1>
+            <p class="text-gray-600 mb-8 text-lg font-medium">あそぶ レベルを えらんでね！</p>
+            
+            <div class="space-y-4">
+                <button onclick="startGame(1)" class="w-full bg-green-400 hover:bg-green-500 text-white text-xl font-bold py-4 rounded-2xl shadow-md transition-transform transform hover:scale-105 active:scale-95 flex items-center justify-center gap-2">
+                    🌱 レベル 1 <span class="text-base font-normal">(1〜5のかず)</span>
+                </button>
+                <button onclick="startGame(2)" class="w-full bg-yellow-400 hover:bg-yellow-500 text-white text-xl font-bold py-4 rounded-2xl shadow-md transition-transform transform hover:scale-105 active:scale-95 flex items-center justify-center gap-2">
+                    🌻 レベル 2 <span class="text-base font-normal">(6〜10のかかず)</span>
+                </button>
+                <button onclick="startGame(3)" class="w-full bg-pink-400 hover:bg-pink-500 text-white text-xl font-bold py-4 rounded-2xl shadow-md transition-transform transform hover:scale-105 active:scale-95 flex items-center justify-center gap-2">
+                    🌸 レベル 3 <span class="text-base font-normal">(たしざん)</span>
+                </button>
+                <button onclick="startGame(4)" class="w-full bg-purple-400 hover:bg-purple-500 text-white text-xl font-bold py-4 rounded-2xl shadow-md transition-transform transform hover:scale-105 active:scale-95 flex items-center justify-center gap-2">
+                    🚀 レベル 4 <span class="text-base font-normal">(ひきざん)</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ゲーム画面 -->
+    <div id="screen-game" class="min-h-screen bg-sky-50 flex flex-col items-center p-4 relative hidden">
+        <!-- ヘッダー -->
+        <div class="w-full max-w-2xl bg-white p-4 rounded-2xl shadow-sm border-2 border-sky-200 mb-6">
+            <div class="flex justify-between items-center mb-3">
+                <button onclick="changeScreen('home')" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded-xl font-bold text-lg">
+                    ◀ やめる
+                </button>
+                <div id="game-level-display" class="text-xl font-bold text-sky-700 bg-sky-100 px-4 py-1 rounded-full">
+                    レベル 1
+                </div>
+                <div id="game-progress-text" class="text-xl font-bold text-gray-600">
+                    1 / 5 もんめ
+                </div>
+            </div>
+            <!-- プログレスバー -->
+            <div class="w-full bg-gray-200 rounded-full h-4 overflow-hidden">
+                <div id="game-progress-bar" class="bg-green-400 h-4 rounded-full transition-all duration-500 ease-out" style="width: 20%"></div>
+            </div>
+        </div>
+
+        <!-- 問題エリア -->
+        <div class="flex-1 w-full max-w-2xl flex flex-col items-center justify-center">
+            <h2 id="question-title" class="text-3xl md:text-4xl font-bold text-gray-800 mb-6 text-center">
+                いくつ あるかな？
+            </h2>
+
+            <!-- イラスト表示エリア -->
+            <div id="illustration-area" class="bg-white p-6 md:p-10 rounded-3xl shadow-lg border-4 border-dashed border-sky-300 mb-10 min-h-[220px] flex items-center justify-center w-full">
+                <!-- JSで動的に生成 -->
+            </div>
+
+            <!-- 選択肢ボタンエリア -->
+            <div id="options-area" class="grid grid-cols-3 gap-4 md:gap-6 w-full px-4">
+                <!-- JSで動的に生成 -->
+            </div>
+        </div>
+    </div>
+
+    <!-- 結果画面 -->
+    <div id="screen-result" class="min-h-screen bg-sky-100 flex flex-col items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-3xl shadow-xl p-8 max-w-md w-full text-center border-4 border-sky-300">
+            <h2 class="text-4xl font-bold text-sky-700 mb-6">おわり！</h2>
+            <p id="result-text" class="text-2xl text-gray-700 mb-4 font-bold">
+                いっぱつ せいかい： 0 / 5
+            </p>
+            <div id="result-feedback">
+                <!-- JSで動的に生成 -->
+            </div>
+            <button onclick="changeScreen('home')" class="w-full mt-6 bg-sky-400 hover:bg-sky-500 text-white text-2xl font-bold py-4 rounded-full shadow-lg transition-transform transform hover:scale-105 active:scale-95">
+                🏠 ホームへ もどる
+            </button>
+        </div>
+    </div>
+
+    <!-- シール帳画面 -->
+    <div id="screen-stickerBook" class="min-h-screen bg-yellow-50 flex flex-col items-center p-4 hidden">
+        <div class="w-full max-w-2xl bg-white rounded-3xl shadow-xl p-6 md:p-10 border-4 border-yellow-300 min-h-[80vh]">
+            <div class="flex justify-between items-center mb-8">
+                <button onclick="changeScreen('home')" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded-xl font-bold text-lg">
+                    ◀ もどる
+                </button>
+                <h2 class="text-3xl font-bold text-yellow-600">📖 シールちょう</h2>
+                <div class="w-20"></div>
+            </div>
+            <div id="sticker-container">
+                <!-- JSで動的に生成 -->
+            </div>
+        </div>
+    </div>
+
+    <!-- フィードバック（正解・不正解）オーバーレイ -->
+    <div id="feedback-overlay" class="fixed inset-0 flex items-center justify-center z-50 bg-white/70 backdrop-blur-sm hidden pointer-events-none">
+        <div id="feedback-content" class="text-center">
+            <!-- JSで切り替え -->
+        </div>
+    </div>
+
+    <script>
+        // --- 教育用データと設定 ---
+        const EMOJIS = ['🍎', '🍊', '🍓', '🐶', '🐱', '🚗', '🌟', '🎈', '🍙', '🐠'];
+        const STICKERS = ['👑', '🦄', '🦖', '🚀', '🌈', '🍦', '🍕', '🎉', '🏆', '⭐', '🦋', '🐞', '🚁', '🚂', '🧸'];
+        const TOTAL_QUESTIONS = 5;
+
+        // --- 状態管理 ---
+        let currentLevel = 1;
+        let questionData = null;
+        let questionNumber = 1;
+        let perfectCount = 0;
+        let failsInCurrent = 0;
+        let stickers = [];
+        let earnedSticker = null;
+        let isFeedbackShowing = false; // ボタン連打防止用
+
+        // --- 問題生成ロジック ---
+        function generateQuestion(level) {
+            const emoji = EMOJIS[Math.floor(Math.random() * EMOJIS.length)];
+            let num1, num2, answer, type;
+
+            if (level === 1) {
+                type = 'count';
+                num1 = Math.floor(Math.random() * 5) + 1;
+                num2 = 0;
+                answer = num1;
+            } else if (level === 2) {
+                type = 'count';
+                num1 = Math.floor(Math.random() * 5) + 6;
+                num2 = 0;
+                answer = num1;
+            } else if (level === 3) {
+                type = 'add';
+                answer = Math.floor(Math.random() * 9) + 2; // 2〜10
+                num1 = Math.floor(Math.random() * (answer - 1)) + 1;
+                num2 = answer - num1;
+            } else {
+                type = 'sub';
+                num1 = Math.floor(Math.random() * 9) + 2; // 全体 2〜10
+                num2 = Math.floor(Math.random() * (num1 - 1)) + 1; // 引く数
+                answer = num1 - num2;
+            }
+
+            let options = [answer];
+            while (options.length < 3) {
+                let wrongAnswer;
+                if (level === 1 || (level === 4 && num1 <= 5)) {
+                    wrongAnswer = Math.floor(Math.random() * 5) + 1;
+                } else {
+                    wrongAnswer = Math.floor(Math.random() * 10) + 1;
+                }
+                if (!options.includes(wrongAnswer)) {
+                    options.push(wrongAnswer);
+                }
+            }
+            options = options.sort(() => Math.random() - 0.5);
+
+            return { type, num1, num2, answer, options, emoji };
+        }
+
+        // --- 画面切り替え ---
+        function changeScreen(screenId) {
+            ['home', 'game', 'result', 'stickerBook'].forEach(id => {
+                document.getElementById(`screen-${id}`).classList.add('hidden');
+            });
+            document.getElementById(`screen-${screenId}`).classList.remove('hidden');
+
+            if (screenId === 'stickerBook') {
+                renderStickerBook();
+            }
+        }
+
+        // --- ゲーム進行処理 ---
+        function startGame(level) {
+            currentLevel = level;
+            questionNumber = 1;
+            perfectCount = 0;
+            failsInCurrent = 0;
+            earnedSticker = null;
+            
+            setupNextQuestion();
+            changeScreen('game');
+        }
+
+        function setupNextQuestion() {
+            questionData = generateQuestion(currentLevel);
+            renderGameScreen();
+        }
+
+        function handleAnswer(selectedNumber) {
+            if (isFeedbackShowing) return;
+
+            if (selectedNumber === questionData.answer) {
+                // 正解
+                showFeedback('correct');
+                const isPerfect = failsInCurrent === 0;
+                if (isPerfect) perfectCount++;
+
+                setTimeout(() => {
+                    hideFeedback();
+                    if (questionNumber < TOTAL_QUESTIONS) {
+                        questionNumber++;
+                        failsInCurrent = 0;
+                        setupNextQuestion();
+                    } else {
+                        finishGame(isPerfect ? perfectCount : perfectCount);
+                    }
+                }, 1500);
+            } else {
+                // 不正解
+                showFeedback('wrong');
+                failsInCurrent++;
+                setTimeout(() => {
+                    hideFeedback();
+                }, 1500);
+            }
+        }
+
+        function finishGame(finalPerfectCount) {
+            let resultFeedbackHtml = '';
+            const isPerfect = finalPerfectCount === TOTAL_QUESTIONS;
+
+            document.getElementById('result-text').innerText = `いっぱつ せいかい： ${finalPerfectCount} / ${TOTAL_QUESTIONS}`;
+
+            if (isPerfect) {
+                earnedSticker = STICKERS[Math.floor(Math.random() * STICKERS.length)];
+                stickers.push(earnedSticker);
+                resultFeedbackHtml = `
+                    <div class="my-8 animate-bounce">
+                        <p class="text-2xl text-red-500 font-bold mb-4">ぜんもん せいかい！<br/>ごほうびシール ゲット！</p>
+                        <div class="inline-block bg-yellow-100 p-8 rounded-full border-4 border-yellow-400 shadow-lg text-8xl transform transition-transform hover:scale-110">
+                            ${earnedSticker}
+                        </div>
+                    </div>
+                `;
+            } else {
+                resultFeedbackHtml = `
+                    <div class="my-8">
+                        <p class="text-xl text-orange-500 font-bold mb-4">よく がんばったね！<br/>つぎは ぜんもん せいかいを<br/>めざそう！</p>
+                        <div class="text-6xl">🌟</div>
+                    </div>
+                `;
+            }
+            
+            document.getElementById('result-feedback').innerHTML = resultFeedbackHtml;
+            changeScreen('result');
+        }
+
+        // --- 描画処理 ---
+        function renderGameScreen() {
+            // ヘッダー情報
+            document.getElementById('game-level-display').innerText = `レベル ${currentLevel}`;
+            document.getElementById('game-progress-text').innerText = `${questionNumber} / ${TOTAL_QUESTIONS} もんめ`;
+            document.getElementById('game-progress-bar').style.width = `${(questionNumber / TOTAL_QUESTIONS) * 100}%`;
+
+            // タイトル
+            const titleEl = document.getElementById('question-title');
+            if (questionData.type === 'count') titleEl.innerText = 'いくつ あるかな？';
+            else if (questionData.type === 'add') titleEl.innerText = 'あわせて いくつ？';
+            else if (questionData.type === 'sub') titleEl.innerText = 'のこりは いくつ？';
+
+            // イラストエリア
+            let illustrationHtml = '';
+            if (questionData.type === 'count') {
+                illustrationHtml = '<div class="flex flex-wrap justify-center gap-3 text-6xl md:text-7xl">';
+                for(let i=0; i<questionData.num1; i++) {
+                    illustrationHtml += `<span class="animate-pulse-slow">${questionData.emoji}</span>`;
+                }
+                illustrationHtml += '</div>';
+            } 
+            else if (questionData.type === 'add') {
+                illustrationHtml = `<div class="flex flex-col md:flex-row items-center justify-center gap-4 text-5xl md:text-7xl w-full">
+                    <div class="flex flex-wrap justify-center gap-2 flex-1">`;
+                for(let i=0; i<questionData.num1; i++) illustrationHtml += `<span>${questionData.emoji}</span>`;
+                illustrationHtml += `</div><div class="text-gray-400 font-bold mx-2">＋</div><div class="flex flex-wrap justify-center gap-2 flex-1">`;
+                for(let i=0; i<questionData.num2; i++) illustrationHtml += `<span>${questionData.emoji}</span>`;
+                illustrationHtml += `</div></div>`;
+            } 
+            else if (questionData.type === 'sub') {
+                illustrationHtml = `
+                    <div class="flex flex-col items-center gap-4 w-full">
+                        <div class="text-gray-500 font-bold text-2xl bg-gray-100 px-6 py-2 rounded-full mb-2">ぜんぶで ${questionData.num1} こ</div>
+                        <div class="flex flex-wrap justify-center gap-3 text-5xl md:text-7xl">`;
+                // 残る分
+                for(let i=0; i<questionData.answer; i++) {
+                    illustrationHtml += `<span>${questionData.emoji}</span>`;
+                }
+                // 引かれる分（斜線）
+                for(let i=0; i<questionData.num2; i++) {
+                    illustrationHtml += `
+                        <span class="opacity-30 relative inline-block">
+                            ${questionData.emoji}
+                            <span class="absolute inset-0 flex items-center justify-center text-red-500 font-bold text-6xl transform -rotate-12">/</span>
+                        </span>`;
+                }
+                illustrationHtml += `</div></div>`;
+            }
+            document.getElementById('illustration-area').innerHTML = illustrationHtml;
+
+            // 選択肢エリア
+            let optionsHtml = '';
+            questionData.options.forEach(opt => {
+                optionsHtml += `
+                    <button onclick="handleAnswer(${opt})" class="bg-sky-400 hover:bg-sky-500 text-white text-5xl md:text-6xl font-bold py-6 rounded-3xl shadow-xl transition-transform transform hover:scale-105 active:scale-95 border-b-8 border-sky-600 flex items-center justify-center">
+                        ${opt}
+                    </button>
+                `;
+            });
+            document.getElementById('options-area').innerHTML = optionsHtml;
+        }
+
+        function renderStickerBook() {
+            const container = document.getElementById('sticker-container');
+            if (stickers.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center text-gray-400 mt-20 text-xl font-bold">
+                        まだ シールがないよ。<br/>ぜんもん せいかいして<br/>シールを あつめよう！
+                    </div>
+                `;
+            } else {
+                let html = '<div class="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 gap-4">';
+                stickers.forEach(sticker => {
+                    html += `
+                        <div class="aspect-square bg-yellow-100 rounded-2xl flex items-center justify-center text-5xl shadow-inner border-2 border-yellow-200 transform rotate-1 hover:rotate-6 transition-transform">
+                            ${sticker}
+                        </div>
+                    `;
+                });
+                html += '</div>';
+                container.innerHTML = html;
+            }
+        }
+
+        // --- フィードバック演出 ---
+        function showFeedback(type) {
+            isFeedbackShowing = true;
+            const overlay = document.getElementById('feedback-overlay');
+            const content = document.getElementById('feedback-content');
+            
+            overlay.classList.remove('hidden');
+
+            if (type === 'correct') {
+                content.className = 'text-center animate-bounce';
+                content.innerHTML = `
+                    <div class="text-[150px] leading-none mb-4 text-red-500 drop-shadow-2xl">⭕</div>
+                    <h2 class="text-5xl font-bold text-red-500 text-shadow-lg bg-white/90 px-8 py-2 rounded-full border-4 border-red-200 inline-block">せいかい！</h2>
+                `;
+            } else {
+                content.className = 'text-center animate-shake';
+                content.innerHTML = `
+                    <div class="text-[150px] leading-none mb-4 text-blue-500 drop-shadow-2xl">❌</div>
+                    <h2 class="text-4xl font-bold text-blue-600 bg-white/90 px-8 py-2 rounded-full border-4 border-blue-200 inline-block">おしい！<br/>もういっかい！</h2>
+                `;
+            }
+        }
+
+        function hideFeedback() {
+            isFeedbackShowing = false;
+            document.getElementById('feedback-overlay').classList.add('hidden');
+        }
+
+    </script>
+</body>
+</html>
