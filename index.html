@@ -41,22 +41,16 @@
             </button>
             <div class="text-6xl mb-4 mt-8 animate-bounce">🎓✨</div>
             <h1 class="text-3xl font-bold text-sky-700 mb-6 tracking-wide leading-tight">
-                かずと けいさん<br/>あそび
+                けいさん あそび
             </h1>
-            <p class="text-gray-600 mb-8 text-lg font-medium">あそぶ レベルを えらんでね！</p>
+            <p class="text-gray-600 mb-8 text-lg font-medium">あそぶ モードを えらんでね！</p>
             
             <div class="space-y-4">
-                <button onclick="startGame(1)" class="w-full bg-green-400 hover:bg-green-500 text-white text-xl font-bold py-4 rounded-2xl shadow-md transition-transform transform hover:scale-105 active:scale-95 flex items-center justify-center gap-2">
-                    🌱 レベル 1 <span class="text-base font-normal">(1〜5のかず)</span>
+                <button onclick="startGame(1)" class="w-full bg-pink-400 hover:bg-pink-500 text-white text-2xl font-bold py-6 rounded-2xl shadow-md transition-transform transform hover:scale-105 active:scale-95 flex items-center justify-center gap-2">
+                    🌸 たしざん
                 </button>
-                <button onclick="startGame(2)" class="w-full bg-yellow-400 hover:bg-yellow-500 text-white text-xl font-bold py-4 rounded-2xl shadow-md transition-transform transform hover:scale-105 active:scale-95 flex items-center justify-center gap-2">
-                    🌻 レベル 2 <span class="text-base font-normal">(6〜10のかかず)</span>
-                </button>
-                <button onclick="startGame(3)" class="w-full bg-pink-400 hover:bg-pink-500 text-white text-xl font-bold py-4 rounded-2xl shadow-md transition-transform transform hover:scale-105 active:scale-95 flex items-center justify-center gap-2">
-                    🌸 レベル 3 <span class="text-base font-normal">(たしざん)</span>
-                </button>
-                <button onclick="startGame(4)" class="w-full bg-purple-400 hover:bg-purple-500 text-white text-xl font-bold py-4 rounded-2xl shadow-md transition-transform transform hover:scale-105 active:scale-95 flex items-center justify-center gap-2">
-                    🚀 レベル 4 <span class="text-base font-normal">(ひきざん)</span>
+                <button onclick="startGame(2)" class="w-full bg-purple-400 hover:bg-purple-500 text-white text-2xl font-bold py-6 rounded-2xl shadow-md transition-transform transform hover:scale-105 active:scale-95 flex items-center justify-center gap-2">
+                    🚀 ひきざん
                 </button>
             </div>
         </div>
@@ -65,13 +59,13 @@
     <!-- ゲーム画面 -->
     <div id="screen-game" class="min-h-screen bg-sky-50 flex flex-col items-center p-4 relative hidden">
         <!-- ヘッダー -->
-        <div class="w-full max-w-2xl bg-white p-4 rounded-2xl shadow-sm border-2 border-sky-200 mb-6">
+        <div class="w-full max-w-2xl bg-white p-4 rounded-2xl shadow-sm border-2 border-sky-200 mb-4">
             <div class="flex justify-between items-center mb-3">
                 <button onclick="changeScreen('home')" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded-xl font-bold text-lg">
                     ◀ やめる
                 </button>
                 <div id="game-level-display" class="text-xl font-bold text-sky-700 bg-sky-100 px-4 py-1 rounded-full">
-                    レベル 1
+                    たしざん
                 </div>
                 <div id="game-progress-text" class="text-xl font-bold text-gray-600">
                     1 / 5 もんめ
@@ -85,17 +79,17 @@
 
         <!-- 問題エリア -->
         <div class="flex-1 w-full max-w-2xl flex flex-col items-center justify-center">
-            <h2 id="question-title" class="text-3xl md:text-4xl font-bold text-gray-800 mb-6 text-center">
-                いくつ あるかな？
+            <h2 id="question-title" class="text-2xl md:text-3xl font-bold text-gray-800 mb-4 text-center">
+                あわせて いくつ？
             </h2>
 
-            <!-- イラスト表示エリア -->
-            <div id="illustration-area" class="bg-white p-6 md:p-10 rounded-3xl shadow-lg border-4 border-dashed border-sky-300 mb-10 min-h-[220px] flex items-center justify-center w-full">
+            <!-- イラスト・数式表示エリア -->
+            <div id="illustration-area" class="bg-white p-4 md:p-6 rounded-3xl shadow-lg border-4 border-dashed border-sky-300 mb-6 min-h-[220px] flex flex-col items-center justify-center w-full">
                 <!-- JSで動的に生成 -->
             </div>
 
-            <!-- 選択肢ボタンエリア -->
-            <div id="options-area" class="grid grid-cols-3 gap-4 md:gap-6 w-full px-4">
+            <!-- 選択肢ボタンエリア (1〜9固定) -->
+            <div id="options-area" class="grid grid-cols-3 gap-3 md:gap-4 w-full px-2 max-w-md">
                 <!-- JSで動的に生成 -->
             </div>
         </div>
@@ -133,7 +127,7 @@
         </div>
     </div>
 
-    <!-- フィードバック（正解・不正解）オーバーレイ -->
+    <!-- フィードバックオーバーレイ -->
     <div id="feedback-overlay" class="fixed inset-0 flex items-center justify-center z-50 bg-white/70 backdrop-blur-sm hidden pointer-events-none">
         <div id="feedback-content" class="text-center">
             <!-- JSで切り替え -->
@@ -147,57 +141,35 @@
         const TOTAL_QUESTIONS = 5;
 
         // --- 状態管理 ---
-        let currentLevel = 1;
+        let currentMode = 1; // 1:たしざん, 2:ひきざん
         let questionData = null;
         let questionNumber = 1;
         let perfectCount = 0;
         let failsInCurrent = 0;
         let stickers = [];
         let earnedSticker = null;
-        let isFeedbackShowing = false; // ボタン連打防止用
+        let isFeedbackShowing = false;
 
         // --- 問題生成ロジック ---
-        function generateQuestion(level) {
+        function generateQuestion(mode) {
             const emoji = EMOJIS[Math.floor(Math.random() * EMOJIS.length)];
             let num1, num2, answer, type;
 
-            if (level === 1) {
-                type = 'count';
-                num1 = Math.floor(Math.random() * 5) + 1;
-                num2 = 0;
-                answer = num1;
-            } else if (level === 2) {
-                type = 'count';
-                num1 = Math.floor(Math.random() * 5) + 6;
-                num2 = 0;
-                answer = num1;
-            } else if (level === 3) {
+            if (mode === 1) { // たしざん
                 type = 'add';
-                answer = Math.floor(Math.random() * 9) + 2; // 2〜10
+                // 答えが最大9になるように設定（選択肢が1〜9のため）
+                answer = Math.floor(Math.random() * 8) + 2; // 2〜9
                 num1 = Math.floor(Math.random() * (answer - 1)) + 1;
                 num2 = answer - num1;
-            } else {
+            } else { // ひきざん
                 type = 'sub';
-                num1 = Math.floor(Math.random() * 9) + 2; // 全体 2〜10
-                num2 = Math.floor(Math.random() * (num1 - 1)) + 1; // 引く数
-                answer = num1 - num2;
+                // はじめの数が最大9になるように設定
+                num1 = Math.floor(Math.random() * 8) + 2; // 2〜9
+                num2 = Math.floor(Math.random() * (num1 - 1)) + 1;
+                answer = num1 - num2; // 答えは必ず1〜8になる
             }
 
-            let options = [answer];
-            while (options.length < 3) {
-                let wrongAnswer;
-                if (level === 1 || (level === 4 && num1 <= 5)) {
-                    wrongAnswer = Math.floor(Math.random() * 5) + 1;
-                } else {
-                    wrongAnswer = Math.floor(Math.random() * 10) + 1;
-                }
-                if (!options.includes(wrongAnswer)) {
-                    options.push(wrongAnswer);
-                }
-            }
-            options = options.sort(() => Math.random() - 0.5);
-
-            return { type, num1, num2, answer, options, emoji };
+            return { type, num1, num2, answer, emoji };
         }
 
         // --- 画面切り替え ---
@@ -213,8 +185,8 @@
         }
 
         // --- ゲーム進行処理 ---
-        function startGame(level) {
-            currentLevel = level;
+        function startGame(mode) {
+            currentMode = mode;
             questionNumber = 1;
             perfectCount = 0;
             failsInCurrent = 0;
@@ -225,7 +197,7 @@
         }
 
         function setupNextQuestion() {
-            questionData = generateQuestion(currentLevel);
+            questionData = generateQuestion(currentMode);
             renderGameScreen();
         }
 
@@ -233,7 +205,6 @@
             if (isFeedbackShowing) return;
 
             if (selectedNumber === questionData.answer) {
-                // 正解
                 showFeedback('correct');
                 const isPerfect = failsInCurrent === 0;
                 if (isPerfect) perfectCount++;
@@ -249,7 +220,6 @@
                     }
                 }, 1500);
             } else {
-                // 不正解
                 showFeedback('wrong');
                 failsInCurrent++;
                 setTimeout(() => {
@@ -291,38 +261,37 @@
         // --- 描画処理 ---
         function renderGameScreen() {
             // ヘッダー情報
-            document.getElementById('game-level-display').innerText = `レベル ${currentLevel}`;
+            document.getElementById('game-level-display').innerText = currentMode === 1 ? '🌸 たしざん' : '🚀 ひきざん';
             document.getElementById('game-progress-text').innerText = `${questionNumber} / ${TOTAL_QUESTIONS} もんめ`;
             document.getElementById('game-progress-bar').style.width = `${(questionNumber / TOTAL_QUESTIONS) * 100}%`;
 
             // タイトル
             const titleEl = document.getElementById('question-title');
-            if (questionData.type === 'count') titleEl.innerText = 'いくつ あるかな？';
-            else if (questionData.type === 'add') titleEl.innerText = 'あわせて いくつ？';
+            if (questionData.type === 'add') titleEl.innerText = 'あわせて いくつ？';
             else if (questionData.type === 'sub') titleEl.innerText = 'のこりは いくつ？';
 
-            // イラストエリア
-            let illustrationHtml = '';
-            if (questionData.type === 'count') {
-                illustrationHtml = '<div class="flex flex-wrap justify-center gap-3 text-6xl md:text-7xl">';
-                for(let i=0; i<questionData.num1; i++) {
-                    illustrationHtml += `<span class="animate-pulse-slow">${questionData.emoji}</span>`;
-                }
-                illustrationHtml += '</div>';
-            } 
-            else if (questionData.type === 'add') {
-                illustrationHtml = `<div class="flex flex-col md:flex-row items-center justify-center gap-4 text-5xl md:text-7xl w-full">
+            // --- 数式とイラストの描画 ---
+            let formulaHtml = '';
+            if (questionData.type === 'add') {
+                formulaHtml = `<div class="text-5xl md:text-6xl font-extrabold text-gray-800 mb-6 text-center tracking-widest bg-gray-100 px-6 py-2 rounded-2xl border-b-4 border-gray-300 w-full">${questionData.num1} ＋ ${questionData.num2} ＝ ？</div>`;
+            } else if (questionData.type === 'sub') {
+                formulaHtml = `<div class="text-5xl md:text-6xl font-extrabold text-gray-800 mb-6 text-center tracking-widest bg-gray-100 px-6 py-2 rounded-2xl border-b-4 border-gray-300 w-full">${questionData.num1} － ${questionData.num2} ＝ ？</div>`;
+            }
+
+            let illustrationHtml = formulaHtml;
+
+            if (questionData.type === 'add') {
+                illustrationHtml += `<div class="flex flex-col md:flex-row items-center justify-center gap-4 text-4xl md:text-5xl w-full">
                     <div class="flex flex-wrap justify-center gap-2 flex-1">`;
                 for(let i=0; i<questionData.num1; i++) illustrationHtml += `<span>${questionData.emoji}</span>`;
-                illustrationHtml += `</div><div class="text-gray-400 font-bold mx-2">＋</div><div class="flex flex-wrap justify-center gap-2 flex-1">`;
+                illustrationHtml += `</div><div class="text-gray-300 font-bold mx-2">＋</div><div class="flex flex-wrap justify-center gap-2 flex-1">`;
                 for(let i=0; i<questionData.num2; i++) illustrationHtml += `<span>${questionData.emoji}</span>`;
                 illustrationHtml += `</div></div>`;
             } 
             else if (questionData.type === 'sub') {
-                illustrationHtml = `
+                illustrationHtml += `
                     <div class="flex flex-col items-center gap-4 w-full">
-                        <div class="text-gray-500 font-bold text-2xl bg-gray-100 px-6 py-2 rounded-full mb-2">ぜんぶで ${questionData.num1} こ</div>
-                        <div class="flex flex-wrap justify-center gap-3 text-5xl md:text-7xl">`;
+                        <div class="flex flex-wrap justify-center gap-3 text-4xl md:text-5xl">`;
                 // 残る分
                 for(let i=0; i<questionData.answer; i++) {
                     illustrationHtml += `<span>${questionData.emoji}</span>`;
@@ -332,22 +301,22 @@
                     illustrationHtml += `
                         <span class="opacity-30 relative inline-block">
                             ${questionData.emoji}
-                            <span class="absolute inset-0 flex items-center justify-center text-red-500 font-bold text-6xl transform -rotate-12">/</span>
+                            <span class="absolute inset-0 flex items-center justify-center text-red-500 font-bold text-5xl transform -rotate-12">/</span>
                         </span>`;
                 }
                 illustrationHtml += `</div></div>`;
             }
             document.getElementById('illustration-area').innerHTML = illustrationHtml;
 
-            // 選択肢エリア
+            // --- 選択肢エリア (1〜9をすべて表示) ---
             let optionsHtml = '';
-            questionData.options.forEach(opt => {
+            for (let i = 1; i <= 9; i++) {
                 optionsHtml += `
-                    <button onclick="handleAnswer(${opt})" class="bg-sky-400 hover:bg-sky-500 text-white text-5xl md:text-6xl font-bold py-6 rounded-3xl shadow-xl transition-transform transform hover:scale-105 active:scale-95 border-b-8 border-sky-600 flex items-center justify-center">
-                        ${opt}
+                    <button onclick="handleAnswer(${i})" class="bg-sky-400 hover:bg-sky-500 text-white text-4xl font-bold py-4 rounded-2xl shadow-md transition-transform transform hover:scale-105 active:scale-95 border-b-4 border-sky-600 flex items-center justify-center">
+                        ${i}
                     </button>
                 `;
-            });
+            }
             document.getElementById('options-area').innerHTML = optionsHtml;
         }
 
